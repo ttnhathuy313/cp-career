@@ -1,0 +1,155 @@
+#include<bits/stdc++.h>
+using namespace std;
+const int MAXN = 2005;
+template <typename T> void chkmax(T &x, T y) {x = max(x, y); }
+template <typename T> void chkmin(T &x, T y) {x = min(x, y); } 
+template <typename T> void read(T &x) {
+	x = 0; int f = 1;
+	char c = getchar();
+	for (; !isdigit(c); c = getchar()) if (c == '-') f = -f;
+	for (; isdigit(c); c = getchar()) x = x * 10 + c - '0';
+	x *= f;
+}
+template <typename T> void write(T x) {
+	if (x < 0) x = -x, putchar('-');
+	if (x > 9) write(x / 10);
+	putchar(x % 10 + '0');
+}
+template <typename T> void writeln(T x) {
+	write(x);
+	puts("");
+}
+int n, timer;
+int top, Stack[MAXN]; 
+int tot, belong[MAXN];
+int dfn[MAXN], low[MAXN];
+bool mp[MAXN][MAXN], instack[MAXN];
+vector <int> a[MAXN], b[MAXN], c[MAXN];
+vector <int> ans[MAXN];
+int d[MAXN];
+bool np[MAXN][MAXN];
+void work(int pos) {
+	dfn[pos] = low[pos] = ++timer;
+	instack[pos] = true;
+	Stack[++top] = pos;
+	for (int i = 1; i <= n; i++) {
+		if (mp[pos][i] == false) continue;
+		if (dfn[i] == 0) {
+			work(i);
+			chkmin(low[pos], low[i]);
+		} else if (instack[i]) chkmin(low[pos], dfn[i]);
+	}
+	if (dfn[pos] == low[pos]) {
+		int tmp = Stack[top--];
+		belong[tmp] = ++tot;
+		instack[tmp] = false;
+		a[tot].push_back(tmp);
+		while (tmp != pos) {
+			tmp = Stack[top--];
+			belong[tmp] = tot;
+			instack[tmp] = false;
+			a[tot].push_back(tmp);
+		}
+	}
+}
+void path(vector <int> &a, vector <int> &b) {
+	b.push_back(a[0]);
+	for (unsigned i = 1; i < a.size(); i++) {
+		int now = a[i];
+		if (mp[now][b[0]]) {
+			b.insert(b.begin(), now);
+			continue;
+		}
+		if (mp[b[i - 1]][now]) {
+			b.push_back(now);
+			continue;
+		}
+		for (unsigned j = 1; j < i; j++)
+			if (mp[b[j - 1]][now] && mp[now][b[j]]) {
+				b.insert(b.begin() + j, now);
+				break;
+			}
+	}
+}
+void loop(vector <int> &b, vector <int> &c) {
+	c.push_back(b[0]);
+	unsigned last = 1, cnt;
+	for (unsigned i = 1; i < b.size(); i++) {
+		int now = b[i];
+		cnt = c.size();
+		if (last != i && mp[now][c[0]]) {
+			while (last <= i) c.push_back(b[last++]);
+			continue;
+		}
+		if (last == i && mp[now][c[0]] && mp[c[cnt - 1]][now]) {
+			while (last <= i) c.push_back(b[last++]);
+			continue;
+		}
+		for (unsigned j = 1; j < cnt; j++) {
+			if (!mp[now][c[j]] || !mp[c[j - 1]][b[last]]) continue;
+			unsigned pos = j;
+			while (last <= i) c.insert(c.begin() + pos++, b[last++]);
+			continue;
+		}
+	}
+}
+void answer(vector <int> &c, vector <int> &a) {
+	ans[c[0]] = c;
+	unsigned cnt = c.size();
+	for (unsigned i = 0; i < a.size(); i++)
+		if (mp[ans[c[0]][cnt - 1]][a[i]]) {
+			for (unsigned j = 0; j < ans[a[i]].size(); j++)
+				ans[c[0]].push_back(ans[a[i]][j]);
+			break;
+		}
+	for (unsigned k = 1; k < c.size(); k++) {
+		ans[c[k]] = ans[c[k - 1]];
+		ans[c[k]].resize(cnt);
+		ans[c[k]].push_back(ans[c[k]][0]);
+		ans[c[k]].erase(ans[c[k]].begin());
+		for (unsigned i = 0; i < a.size(); i++)
+			if (mp[ans[c[k]][cnt - 1]][a[i]]) {
+				for (unsigned j = 0; j < ans[a[i]].size(); j++)
+					ans[c[k]].push_back(ans[a[i]][j]);
+				break;
+			}
+	}
+}
+int main() {
+	freopen("TOURIST.INP", "r", stdin);
+	freopen("TOURIST.OUT", "w", stdout);
+	read(n);
+	for (int i = 1; i <= n - 1; i++)
+	for (int j = 1; j <= i; j++) {
+		bool x; read(x);
+		if (x) mp[j][i + 1] = true;
+		else mp[i + 1][j] = true;
+	}
+	for (int i = 1; i <= n; i++)
+		if (dfn[i] == 0) work(i);
+	for (int i = 1; i <= n; i++)
+	for (int j = 1; j <= n; j++)
+		if (belong[i] != belong[j]) np[belong[i]][belong[j]] = mp[i][j];
+	for (int i = 1; i <= tot; i++)
+	for (int j = 1; j <= tot; j++)
+		d[i] += np[i][j];
+	int last = 0;
+	for (int i = 1; i <= tot; i++)
+	for (int j = 1; j <= tot; j++)
+		if (d[j] == 0) {
+			path(a[j], b[j]);
+			loop(b[j], c[j]);
+			answer(c[j], a[last]);
+			for (int k = 1; k <= tot; k++)
+				if (np[k][j]) d[k]--;
+			d[j] = -1; last = j;
+			break;
+		}
+	for (int i = 1; i <= n; i++) {
+		printf("%u", ans[i].size());
+		for (unsigned j = 0; j < ans[i].size(); j++)
+			printf(" %d", ans[i][j]);
+		putchar('\n');
+	}
+	return 0;
+}

@@ -1,0 +1,137 @@
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <algorithm>
+#include <cmath>
+#include <vector>
+#include <set>
+#include <map>
+#include <unordered_set>
+#include <unordered_map>
+#include <queue>
+#include <ctime>
+#include <cassert>
+#include <complex>
+#include <string>
+#include <cstring>
+#include <chrono>
+#include <random>
+#include <queue>
+#include <bitset>
+#include <stack>
+ 
+using namespace std;
+ 
+typedef long long ll;
+typedef pair<ll, ll> ii;
+typedef pair<ll, ll> pli;
+typedef pair<ll, ll> pll;
+typedef long double ld;
+ 
+#define FOR(i, a, b) for (ll i = (a), _b = (b); i <= _b; i++)
+#define FORD(i, b, a) for (ll i = (b), _a = (a); i >= _a; i--)
+#define REP(i, n) for (ll i = 0, _n = (n); i < _n; i++)
+#define FORE(i, v) for (__typeof((v).begin()) i = (v).begin(); i != (v).end(); i++)
+#define fi   first
+#define se   second
+#define all(a) a.begin(), a.end()
+#define MASK(i) (1LL << (i))
+#define BIT(x, i) (((x) >> (i)) & 1)
+#define endl '\n'
+ 
+const ll oo = 1e18;
+ 
+struct Node {
+	ll lazy, minVal;
+	Node() {}
+	Node(ll _lazy, ll _minVal) : lazy(_lazy), minVal(_minVal) {}
+};
+ 
+struct SegmentTree {
+	vector <Node> st;
+	ll n;
+ 
+	ll Left(ll x) {return (x << 1);}
+	ll Right(ll x) {return (x << 1) + 1;}
+ 
+	SegmentTree() {}
+	SegmentTree(ll n) {
+		this -> n = n;
+		st.resize(4 * n + 5);
+		REP(i, 4 * n + 5) st[i] = Node(0, 0);
+	}
+ 
+	void push(ll id) {
+		st[Left(id)].lazy += st[id].lazy;
+		st[Left(id)].minVal += st[id].lazy;
+		st[Right(id)].lazy += st[id].lazy;
+		st[Right(id)].minVal += st[id].lazy;
+		st[id].lazy = 0;
+	}
+ 
+	void update(ll id, ll L, ll R, ll i, ll j, ll val) {
+		if (L > j || R < i) return;
+		if (L >= i && R <= j) {
+			st[id].lazy += val;
+			st[id].minVal += val;
+		} else {
+			ll mid = (L + R) >> 1;
+			push(id);
+			update(Left(id), L, mid, i, j, val);
+			update(Right(id), mid + 1, R, i, j, val);
+			st[id].minVal = min(st[Left(id)].minVal, st[Right(id)].minVal);
+		}
+	}
+ 
+	ll query(ll id, ll L, ll R, ll i, ll j) {
+		if (i > j) return 0;
+		if (L > j || R < i) return oo;
+		if (L >= i && R <= j) return st[id].minVal;
+		ll mid = (L + R) >> 1;
+		push(id);
+		return min(query(Left(id), L, mid, i, j), query(Right(id), mid + 1, R, i, j));
+	}
+ 
+	void update(ll i, ll j, ll val) {update(1, 1, n, i, j, val);}
+	ll query(ll i, ll j) {return query(1, 1, n, i, j);}
+};
+ 
+const ll N = 1e5 + 5;
+ll a[N], f[N], n, M, sum[N];
+ 
+int main(int argc, char const *argv[])
+{
+	ios_base::sync_with_stdio(0); cin.tie(0);
+	clock_t tStart = clock();
+ 
+	cin >> n >> M;
+	FOR(i, 1, n) {
+		cin >> a[i];
+		if (a[i] > M) {
+			cout << -1 << endl;
+			return 0;
+		}
+		sum[i] = sum[i - 1] + a[i];
+	}
+	a[0] = M;
+	SegmentTree IT(n);
+	ll j = 1;
+	stack <ll> S;
+	S.push(0);
+	FOR(i, 1, n) {
+		while (sum[i] - sum[j - 1] > M) j++;
+		while (!S.empty() && a[S.top()] < a[i]) {
+			ll u = S.top(); S.pop();
+			ll v = S.top();
+			IT.update(v + 1, u, -a[u]);
+		}
+		IT.update(S.top() + 1, i, a[i]);
+		S.push(i);
+		f[i] = IT.query(j, i);
+		IT.update(i + 1, i + 1, f[i]);
+	}
+	cout << f[n] << endl;
+ 
+	fprintf(stderr, "Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+	return 0;
+}

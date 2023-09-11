@@ -1,0 +1,48 @@
+#include <bits/stdc++.h>
+using namespace std;
+int n,a[10];
+bool cheochinh[10],cheophu[10],check[10];
+bool ktra(int i,int j){
+	if (!check[j]) return false;
+	int sum1=j-i+n;
+	int sum2=i+j;
+	if (!cheochinh[sum1]) return false;
+	if (!cheophu[sum2]) return false;
+	return true;
+}
+void back(int i){
+	for (int j=1;j<=n;j++){
+		cout << i <<' '<<j<<' '<<ktra(i,j)<<endl;
+		int d; cin >> d;
+		if (ktra(i,j)){
+			check[j]=false;
+			cheophu[i+j]=false;
+			cheochinh[j-i+n]=false;
+			a[i]=j;
+			if (i==n){
+			//	for (int k=1;k<=n;k++) cout << a[i]<<' ';
+					cout <<"---------"<<endl;
+			}
+			else back(i+1);
+			check[j]=true;
+			cheochinh[j-i+n]=true;
+			cheophu[i+j]=true;
+		}
+	}
+}
+
+int main()
+{
+	//freopen("read.inp","r",stdin);
+	cin >> n;
+	for (int i=1;i<n*2-1;i++){
+		cheochinh[i]=true;
+		check[i]=true;
+	}
+	check[n]=true;
+	//cout << cheochinh[2]<<endl;
+	
+	for (int i=2;i<=n*2-1;i++) cheophu[i]=true;
+	back(1);
+	return 0;
+}

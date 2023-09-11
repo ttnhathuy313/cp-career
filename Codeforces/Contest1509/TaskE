@@ -1,0 +1,77 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+#define int long long
+typedef pair <int, int> ii;
+typedef pair <int, ii> iii;
+
+const int N = 2e5 + 5;
+int n, m;
+vector <int> adj[N];
+
+struct DisjointSet {
+	int n;
+	vector <int> lab, Rank;
+	vector <iii> roll_back;
+
+	DisjointSet() {}
+	DisjointSet(int _n) {
+		this -> n = _n;
+		lab.assign(n + 5, -1);
+		Rank.assign(n + 5, 1);
+		roll_back.clear();
+	}
+	int root(int x) {
+		return (lab[x] == -1 ? x : lab[x] = root(lab[x]));
+	}
+	int merge(int u, int v) {
+		int x = root(u), y = root(v);
+		if (x == y) return 0;
+		if (Rank[x] < Rank[y]) swap(x, y);
+		roll_back.push_back({lab[y], {x, y}});
+		lab[y] = x;
+		Rank[x] += Rank[y];
+		return 1;
+	}
+	void roll(int times) {
+		while (times--) {
+			iii d = roll_back.back();
+			roll_back.pop_back();
+			int x = d.second.first, y = d.second.second, L = d.first;
+			lab[y] = L;
+			Rank[x] -= Rank[y];
+		}
+	}
+} dsu;
+
+void dfs(int u, int pre) {
+	set <int> V; V.clear();
+	
+}
+
+signed main() {
+	ios_base::sync_with_stdio(0); cin.tie(0);
+	freopen("TaskF.inp", "r", stdin);
+	freopen("TaskF.out", "w", stdout);
+
+	cin >> n >> m;
+	int xor_sum = 0;
+	vector <iii> Edges;
+	Edges.clear();
+	for (int i = 1; i <= m; ++i) {
+		int u, v, w;
+		cin >> u >> v >> w;
+		adj[u].push_back({v, w});
+		adj[v].push_back({u, w});
+		Edges.push_back({w, {u, v}});
+		xor_sum ^= w;
+	}
+	sort(Edges.begin(), Edges.end());
+	dsu = DisjointSet(n);
+	for (int i = 1; i <= n; ++i) (dsu.root(i) == i) {
+		dfs(i, -1);
+	}
+
+
+	return 0;
+}

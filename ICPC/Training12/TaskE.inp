@@ -1,0 +1,7 @@
+1
+int x = 9997;
+int y = 70;
+int z = ff(f(fff(f(x),ff(x,y)));
+int x = 103;
+int y = 3;
+int z = ff(ff(x,y),y);
